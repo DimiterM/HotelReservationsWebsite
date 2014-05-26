@@ -3,7 +3,7 @@
         <title>Hotel Reservations Website</title>
     </head>
     <body>
-        <h1>Hotel Reservations Website</h1>
+        <h1><a href="/hotels/">Hotel Reservations Website</a></h1>
 
         {% if user.is_authenticated %}
             Hello, {{ user.email }}!
@@ -11,8 +11,10 @@
             <a href="login/">Login!</a>
         {% endif %}
         
+        <br>
         {% block content %}
         {% endblock %}
+        <br>
         
         <footer>
             (c) Dimiter Mutafchiev, 2014

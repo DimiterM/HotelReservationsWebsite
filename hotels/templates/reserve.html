@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-	reserve page
+	<form method="POST">
+	<!-- fields -->
+	{% csrf_token %}
+	<br>
+	<button>Go!</button>
+	</form>
 {% endblock %}

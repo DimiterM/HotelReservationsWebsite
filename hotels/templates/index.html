@@ -2,21 +2,35 @@
 
 {% block content %}
       
-	<!-- search -->
-        
+	<form method="POST">
+	Hotel name: <input type="text" name="name" /><br>
+	Stars (minimum): <input type="range" id="stars" min="1" max="5" /><br>
+	Location: <input type="text" name="location" /><br>
+	
+	<h5>Tags:</h5>
+	{% for tag in tags_list %}
+		<input type="checkbox" name="tag" value="{{ tag }}">{{ tag }}</input>
+	{% endfor %}
+	
+	{% csrf_token %}
 	<br>
+	<button>Search!</button>
+	</form>
         
-	<table>
-		<tr>
+	<hr><br>
+        
+	<table border="black 1px">
 	    {% for hotel in hotels_list %}
+	    <tr>
     		<td>
+    			<img src="{{ hotel.photo }}" alt="{{ hotel.name }} photo" />
     			<h3><a href="/hotels/hotel-info/{{ hotel.id }}/">{{ hotel.name }}</a></h3>
         		<div>{{ hotel.stars }} stars</div>
         		<div>{{ hotel.location }}</div>
         		<p>{{ hotel.text }}</p>
         	</td>
+        </tr>
     	{% endfor %}
-    	</tr>
 	</table>
 	{% if previous %}
 		<a href="/hotels/{{ previous }}">previous</a>
