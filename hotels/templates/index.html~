@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+      
+	<!-- search -->
+        
+	<br>
+        
+	<table>
+		<tr>
+	    {% for hotel in hotels_list %}
+    		<td>
+    			<h3><a href="/hotels/hotel-info/{{ hotel.id }}/">{{ hotel.name }}</a></h3>
+        		<div>{{ hotel.stars }} stars</div>
+        		<div>{{ hotel.location }}</div>
+        		<p>{{ hotel.text }}</p>
+        	</td>
+    	{% endfor %}
+    	</tr>
+	</table>
+	{% if previous %}
+		<a href="/hotels/{{ previous }}">previous</a>
+	<a href="/hotels/{{ next }}">next</a>
+
+{% endblock %}

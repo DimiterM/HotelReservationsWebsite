@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <img src="">Hotel photo</img>
+	<h1>{{ hotel.name }}</h1>
+	<div>{{ hotel.stars }} stars</div>
+	<div>{{ hotel.location }}</div>
+	<p>{{ hotel.text }}</p>
+	
+	<br>
+	
+	<a href="/hotels/reserve/{{ hotel.id }}">Make reservations!</a>
+{% endblock %}
