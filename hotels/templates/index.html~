@@ -11,7 +11,7 @@
 	{% for tag in tags_list %}
 		<input type="checkbox" name="tag" value="{{ tag }}">{{ tag }}</input>
 	{% endfor %}-->
-	
+	{{ form.as_p }}
 	<br>
 	{% csrf_token %}
 	<button>Search!</button>

@@ -1,5 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-	login page
+	<form method="POST">
+	{{ login_form.as_p }}
+	{% csrf_token %}
+	<button>Login!</button>
+	</form>
+	
+	<br><hr>
+	
+	<form method="GET">
+	{{ register_form.as_p }}
+	{% csrf_token %}
+	<button>Register!</button>
+	</form>
 {% endblock %}

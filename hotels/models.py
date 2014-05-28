@@ -8,9 +8,9 @@ class User(models.Model):
 	
 	def __unicode__(self):
 		return self.email
-		
-	def __str__(self):
-		return self.unicode()
+#		
+#	def __str__(self):
+#		return self.unicode()
 	
 
 class Tag(models.Model):
@@ -18,9 +18,6 @@ class Tag(models.Model):
 	
 	def __unicode__(self):
 		return self.tag
-			
-	def __str__(self):
-		return self.unicode()
 
 
 class Hotel(models.Model):
@@ -33,10 +30,6 @@ class Hotel(models.Model):
 	
 	def __unicode__(self):
 		return self.name + " (" + str(self.stars) + " stars) - " + self.location
-			
-	def __str__(self):
-		return self.unicode()
-	
 
 
 class Room(models.Model):
@@ -46,9 +39,6 @@ class Room(models.Model):
 	
 	def __unicode__(self):
 		return str(self.number) + ", " + self.type + " @ " + self.hotel.name
-			
-	def __str__(self):
-		return self.unicode()
 
 
 class Reservation(models.Model):
@@ -59,8 +49,5 @@ class Reservation(models.Model):
 	
 	def __unicode__(self):
 		return str(self.user) + " - from " + str(self.start_date) + " to " + str(self.end_date) + " in " + str(self.room)
-		
-	def __str__(self):
-		return self.unicode()
 
 

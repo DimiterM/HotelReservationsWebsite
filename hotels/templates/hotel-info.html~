@@ -7,6 +7,12 @@
 	<div>{{ hotel.location }}</div>
 	<p>{{ hotel.text }}</p>
 	
+	<ul>
+	{% for tag in hotel.tags.all %}
+		<li>{{ tag }}</li>
+	{% endfor %}
+	</ul>
+	
 	<br>
 	
 	<a href="/hotels/reserve/{{ hotel.id }}">Make reservations!</a>
