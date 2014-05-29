@@ -1,5 +1,5 @@
 from django.contrib import admin
-from polls.models import *
+from hotels.models import *
 
 
 admin.site.register(Hotel)

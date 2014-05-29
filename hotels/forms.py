@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 from django import forms
-from hotels.models import Hotel, Tag
+from hotels.models import Hotel, Tag, Reservation
 from django.contrib.auth.models import User
 
 class SearchHotelForm(ModelForm):
@@ -14,19 +14,34 @@ class SearchHotelForm(ModelForm):
         exclude = ['text', 'photo']
 
 
+class ReservationForm(ModelForm):
+    start_date = forms.DateField(label='First day')
+    end_date = forms.DateField(label='Last day')
+    
+    def __init__(self, *args, **kwargs):
+        extra = kwargs.pop('extra') if 'extra' in kwargs else {}
+        super(ReservationForm, self).__init__(*args, **kwargs)
+        
+        for room_type in extra:
+            self.fields[room_type['type']] = forms.IntegerField(label=room_type['type'], initial=0)
+    
+    class Meta:
+        model = Reservation
+        fields = ['start_date', 'end_date']
+
+
 class AuthenticateUser(ModelForm):
     username = forms.CharField()
-    password = forms.CharField()
-    email = forms.EmailField(label='E-mail')
+    password = forms.CharField(widget=forms.PasswordInput())
     
     class Meta:
         model = User
-        fields = ['username', 'password', 'email']
+        fields = ['username', 'password']
 
 
 class RegisterUser(ModelForm):
     username = forms.CharField()
-    password = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput())
     email = forms.EmailField(label='E-mail')
     first_name = forms.CharField(label='First name', required=False)
     last_name = forms.CharField(label='Last name', required=False)

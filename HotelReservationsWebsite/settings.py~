@@ -36,6 +36,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    'hotels',
+    
+    'south',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -45,8 +49,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    'hotels',
 )
 
 ROOT_URLCONF = 'HotelReservationsWebsite.urls'
@@ -84,3 +86,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+try:
+    from local_settings.py import *
+except:
+    pass
+
