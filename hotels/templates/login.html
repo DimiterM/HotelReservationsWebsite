@@ -1,17 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-	<form method="GET">
+	<form method="POST">
 	{{ login_form.as_p }}
 	{% csrf_token %}
 	<button>Login!</button>
 	</form>
-	
-	<br><hr>
-	
-	<form method="POST">
-	{{ register_form.as_p }}
-	{% csrf_token %}
-	<button>Register!</button>
-	</form>
+	<br/>
+	<p>Not a member? <a href="/hotels/register/">Register!</a><p>
 {% endblock %}

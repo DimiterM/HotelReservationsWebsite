@@ -26,12 +26,15 @@ class Hotel(models.Model):
 
 
 class Room(models.Model):
-	number = models.IntegerField(validators=[MinValueValidator(1)]) # TODO: make unique for hotel
-	type = models.CharField(max_length=30)
-	hotel = models.ForeignKey('Hotel')
-	
-	def __str__(self):
-	    return "{0}, {1} @ {2}".format(self.number, self.type, self.hotel.name)
+    number = models.IntegerField(validators=[MinValueValidator(1)]) # TODO: make unique for hotel
+    type = models.CharField(max_length=30)
+    hotel = models.ForeignKey('Hotel')
+    
+    def __str__(self):
+        return "{0}, {1} @ {2}".format(self.number, self.type, self.hotel.name)
+    
+    class Meta:
+        unique_together = ("number", "hotel")
 
 
 class Reservation(models.Model):

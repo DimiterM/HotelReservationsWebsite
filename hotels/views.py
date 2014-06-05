@@ -1,10 +1,10 @@
 from django.shortcuts import render, render_to_response, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 
 from hotels.models import Hotel, Tag, Room
 
-from hotels.forms import SearchHotelForm, AuthenticateUser, RegisterUser, ReservationForm
+from hotels.forms import SearchHotelForm, ReservationForm, AuthenticateUser, RegisterUser
 
 from itertools import repeat
 
@@ -38,24 +38,29 @@ def hotel_info(request, hotel_id):
     return render(request, "hotel-info.html", locals())
 
 
-def login(request):     # TODO!
-    login_data = request.GET if request.GET else None
+def login_view(request):
+    login_data = request.POST if request.POST else None
     login_form = AuthenticateUser(login_data)
-    
-    register_data = request.POST if request.POST else None
-    register_form = RegisterUser(register_data)
-    
-    if request.method == 'GET' and login_form.is_valid():    # user logs in
-        user = authenticate(username=login_form.cleaned_data['username'], password=login_form.cleaned_data['password'])
-        if user is not None and user.is_active():
+
+    if request.method == 'POST':
+        user = authenticate(username=request.POST.get('username', ''), password=request.POST.get('password', ''))
+        if user is not None:
             login(request, user)
             return HttpResponseRedirect('/hotels/')
-    elif request.method == 'POST' and register_form.is_valid():     # new user registers
-        register_form.save()
-        return HttpResponseRedirect('/hotels/')
-    
+
     return render(request, "login.html", locals())
 
+
+def register(request):
+    register_data = request.POST if request.POST else None
+    register_form = RegisterUser(register_data)
+
+    if request.method == 'POST':
+        if register_form.is_valid():
+            register_form.save()
+            return HttpResponse("Successfully registered! <a href=\"/hotels/login/\">Login!</a>")
+
+    return render(request, "register.html", locals())
 
 
 def reserve(request, hotel_id):
@@ -94,4 +99,3 @@ def reserve(request, hotel_id):
     
     return render(request, "reserve.html", locals())
     
-

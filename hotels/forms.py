@@ -2,6 +2,7 @@ from django.forms import ModelForm
 from django import forms
 from hotels.models import Hotel, Tag, Reservation
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
 class SearchHotelForm(ModelForm):
     name = forms.CharField(label='Hotel name', required=False)
@@ -39,13 +40,14 @@ class AuthenticateUser(ModelForm):
         fields = ['username', 'password']
 
 
-class RegisterUser(ModelForm):
-    username = forms.CharField()
-    password = forms.CharField(widget=forms.PasswordInput())
+class RegisterUser(UserCreationForm):
     email = forms.EmailField(label='E-mail')
     first_name = forms.CharField(label='First name', required=False)
     last_name = forms.CharField(label='Last name', required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(RegisterUser, self).__init__(*args, **kwargs)
     
     class Meta:
         model = User
-        fields = ['username', 'password', 'email', 'first_name', 'last_name']
+        fields = ['username', 'email', 'first_name', 'last_name']

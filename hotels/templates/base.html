@@ -6,10 +6,10 @@
         <h1><a href="/hotels/">Hotel Reservations Website</a></h1>
 
         {% if user.is_authenticated %}
-            <div>Hello, {{ user.email }}!</div>
-            <!--<div><a href="logout/">Logout!</a></div>-->
+            <div>Hello, {{user.username}}! ({{ user.email }})</div>
+            <div><a href="/hotels/logout/">Logout!</a></div>
         {% else %}
-            <a href="login/">Login!</a>
+            <a href="/hotels/login/">Login!</a>
         {% endif %}
         <hr>
         
