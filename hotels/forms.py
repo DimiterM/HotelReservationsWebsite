@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 from django import forms
-from hotels.models import Hotel, Tag, Reservation
+from hotels.models import Hotel, Tag, RoomType, Room, Reservation
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
@@ -24,7 +24,8 @@ class ReservationForm(ModelForm):
         super(ReservationForm, self).__init__(*args, **kwargs)
         
         for room_type in extra:
-            self.fields[room_type['type']] = forms.IntegerField(label=room_type['type'], initial=0)
+            room_type = RoomType.objects.get(id=room_type['type'])    # query gets the room type as object
+            self.fields[room_type.type] = forms.IntegerField(label=room_type.type, initial=0)
     
     class Meta:
         model = Reservation

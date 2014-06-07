@@ -1,7 +1,10 @@
-from hotels.models import Hotel, Tag, Room, Reservation
+from hotels.models import Hotel, Tag, RoomType, Room, Reservation
 from datetime import timedelta
 
-def get_free_rooms_of_type(hotel_id, start_date, end_date, room_type):   
+def get_free_rooms_of_type(hotel_id, start_date, end_date, room_type):
+    room_type = RoomType.objects.get(type=room_type)
+    room_type = room_type.id
+
     all_rooms = Room.objects.filter(hotel=hotel_id, type=room_type)
     
     ids_rooms_taken_already = Reservation.objects.filter(room__type=room_type, room__hotel__id=hotel_id, start_date__lt=start_date, end_date__gte=start_date).values('room').distinct()

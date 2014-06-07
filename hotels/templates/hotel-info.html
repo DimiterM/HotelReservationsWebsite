@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <img src="">Hotel photo</img>
+    <div>
+    	{% for photo in photo_album %}
+    		<img src="/hotels/{{ photo.image.url }}" alt="{{ hotel.name }} photo" />
+    	{% endfor %}
 	<h1>{{ hotel.name }}</h1>
 	<div>{{ hotel.stars }} stars</div>
 	<div>{{ hotel.location }}</div>

@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'c8z^xv+brihwun(9%a*=(c__ewg3myesjlwx&n_*u_gtai8o#w'
+SECRET_KEY = '*_t_e0_&dd9tpbq-%m4p+8om3!(tmiv57&pfo1fc=1)_@8p#3+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,6 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     
     'hotels',
+    
+    'south',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -84,10 +86,3 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
-
-
-try:
-    from local_settings.py import *
-except:
-    pass
-

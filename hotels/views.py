@@ -2,7 +2,7 @@ from django.shortcuts import render, render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 
-from hotels.models import Hotel, Tag, Room
+from hotels.models import Hotel, Tag, Room, RoomType, Photo
 
 from hotels.forms import SearchHotelForm, ReservationForm, AuthenticateUser, RegisterUser
 
@@ -26,7 +26,7 @@ def index(request, page_num=1):
         previous = page_num - 1
         next = page_num + 1
         
-        hotels_list = Hotel.objects.all()[((page_num-1) * 10) : (page_num * 10 - 1)]
+        hotels_list = Hotel.objects.all()[((page_num - 1) * 10) : (page_num * 10 - 1)]
         
         form = SearchHotelForm()
     
@@ -35,6 +35,7 @@ def index(request, page_num=1):
 
 def hotel_info(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id)
+    photo_album = Photo.objects.filter(hotel=hotel_id)
     return render(request, "hotel-info.html", locals())
 
 
@@ -72,27 +73,30 @@ def reserve(request, hotel_id):
     
     if request.method == 'POST':
         if form.is_valid():
+            room_types = [RoomType.objects.get(id=rt['type']) for rt in room_types]
+
             rooms_to_save = []	# rooms_to_save = [ roomtype1, roomtype1, ..., roomtype2, roomtype2, ... ]
             free_rooms_of_type = []
             reservations = []
 
             for room in room_types:
-                rooms_to_save += list(repeat(room['type'], form.cleaned_data[room['type']]))
+                rooms_to_save += list(repeat(room.type, form.cleaned_data[room.type]))
                 
             for room in rooms_to_save:
                 free_rooms_of_type = get_free_rooms_of_type(hotel_id, form.cleaned_data['start_date'], form.cleaned_data['end_date'], room)
                 
                 if not free_rooms_of_type:
+                    for res_id in reservations:
+                        r = Reservation.objects.get(id=res_id)
+                        r.delete()
                     log = "Not enough free rooms!"
                     return render(request, "reserve.html", locals())
                 else:
                     best_room_for_this = choose_room_optimally(free_rooms_of_type, form.cleaned_data['start_date'], form.cleaned_data['end_date'])
                     reservation = Reservation(start_date=form.cleaned_data['start_date'], end_date=form.cleaned_data['end_date'], user=request.user, room=best_room_for_this)
-                    reservations.append(reservation)
-            
-            for reservation in reservations:
-                reservation.save()
-                log = "Success!"
+                    reservation.save()
+                    reservations.append(reservation.id)
+                    log = "Success!"
                     
         else:
             log = "Form is not valid!"

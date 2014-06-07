@@ -15,7 +15,6 @@
 	    {% for hotel in hotels_list %}
 	    <tr>
     		<td>
-    			<img src="{{ hotel.photo }}" alt="{{ hotel.name }} photo" />
     			<h3><a href="{{ hotel.get_absolute_url }}">{{ hotel.name }}</a></h3>
         		<div>{{ hotel.stars }} stars</div>
         		<div>{{ hotel.location }}</div>
