@@ -18,7 +18,7 @@ def index(request, page_num=1):
     if form.is_valid():
         if form.cleaned_data['tags']:
             hotels_list = Hotel.objects.filter(name__icontains=form.cleaned_data['name'], stars__gte=form.cleaned_data['stars'], location__icontains=form.cleaned_data['location'], tags__contains=form.cleaned_data['tags']).distinct()
-        else:
+        else:   # do not include tags in the query (because 'tags__contains=[]' return no hotels)
             hotels_list = Hotel.objects.filter(name__icontains=form.cleaned_data['name'], stars__gte=form.cleaned_data['stars'], location__icontains=form.cleaned_data['location']).distinct()
     
     else:
@@ -70,9 +70,11 @@ def reserve(request, hotel_id):
     
     data = request.POST if request.POST else None
     form = ReservationForm(data, extra=room_types)
+    # dynamically generate 1 number field for each room type in this hotel
     
     if request.method == 'POST':
         if form.is_valid():
+            # get rooms by type
             room_types = [RoomType.objects.get(id=rt['type']) for rt in room_types]
 
             rooms_to_save = []	# rooms_to_save = [ roomtype1, roomtype1, ..., roomtype2, roomtype2, ... ]
@@ -82,10 +84,14 @@ def reserve(request, hotel_id):
             for room in room_types:
                 rooms_to_save += list(repeat(room.type, form.cleaned_data[room.type]))
                 
+            # foreach room in rooms_to_save make a separate reservation
             for room in rooms_to_save:
                 free_rooms_of_type = get_free_rooms_of_type(hotel_id, form.cleaned_data['start_date'], form.cleaned_data['end_date'], room)
                 
                 if not free_rooms_of_type:
+                    # delete all reservations we just put
+                    # (because either all reservations succeed
+                    # for the current request, or none)
                     for res_id in reservations:
                         r = Reservation.objects.get(id=res_id)
                         r.delete()
@@ -102,4 +108,4 @@ def reserve(request, hotel_id):
             log = "Form is not valid!"
     
     return render(request, "reserve.html", locals())
-    
+

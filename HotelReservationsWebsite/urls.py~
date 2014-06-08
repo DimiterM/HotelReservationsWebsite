@@ -1,11 +1,11 @@
 from django.conf.urls import patterns, include, url
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 from django.contrib import admin
 admin.autodiscover()
 
-#from django.conf import settings
-#from django.conf.urls.static import static
-#from django.views.generic import RedirectView
 
 urlpatterns = patterns('',
     # Examples:
@@ -14,4 +14,4 @@ urlpatterns = patterns('',
 
     url(r'^hotels/', include('hotels.urls')),
     url(r'^admin/', include(admin.site.urls)),
-) #+ static(settings.MEDIA_URL, photos_root=settings.MEDIA_ROOT)
+) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
