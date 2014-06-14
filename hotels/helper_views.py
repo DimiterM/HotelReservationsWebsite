@@ -30,7 +30,7 @@ def get_free_rooms_of_type(hotel_id, start_date, end_date, room_type):
     return [x for x in all_rooms if x.id not in unavailable_rooms]
 
 
-def choose_room_optimally(free_rooms_of_type, start_date, end_date):
+def choose_best_room(free_rooms_of_type, start_date, end_date):
     """
     Out of all free rooms candidates to be reserved now
     choose one so that future reservations have a better chance to be satisfied.
@@ -69,5 +69,5 @@ def choose_room_optimally(free_rooms_of_type, start_date, end_date):
         reservations_ending_in_interval = Reservation.objects.filter(end_date__gte = start_date + timedelta(days=INTERVAL_TO_CHECK), end_date__lte =  end_date + timedelta(days=INTERVAL_TO_CHECK)).count()
         busyness_of_rooms.append(reservations_starting_in_interval + reservations_ending_in_interval)
     
-    index_of_optimal = busyness_of_rooms.index(min(busyness_of_rooms))
-    return free_rooms_of_type[index_of_optimal]
+    index_of_best = busyness_of_rooms.index(max(busyness_of_rooms))
+    return free_rooms_of_type[index_of_best]

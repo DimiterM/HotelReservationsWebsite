@@ -8,7 +8,7 @@ from hotels.forms import SearchHotelForm, ReservationForm, AuthenticateUser, Reg
 
 from itertools import repeat
 
-from helper_views import *
+from hotels.helper_views import *
 
 
 def index(request, page_num=1):
@@ -98,7 +98,7 @@ def reserve(request, hotel_id):
                     log = "Not enough free rooms!"
                     return render(request, "reserve.html", locals())
                 else:
-                    best_room_for_this = choose_room_optimally(free_rooms_of_type, form.cleaned_data['start_date'], form.cleaned_data['end_date'])
+                    best_room_for_this = choose_best_room(free_rooms_of_type, form.cleaned_data['start_date'], form.cleaned_data['end_date'])
                     reservation = Reservation(start_date=form.cleaned_data['start_date'], end_date=form.cleaned_data['end_date'], user=request.user, room=best_room_for_this)
                     reservation.save()
                     reservations.append(reservation.id)
