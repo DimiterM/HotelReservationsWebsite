@@ -1,5 +1,6 @@
 from hotels.models import Hotel, Tag, RoomType, Room, Reservation
 from datetime import timedelta
+from operator import attrgetter
 
 def get_free_rooms_of_type(hotel_id, start_date, end_date, room_type):
     """
@@ -65,9 +66,55 @@ def choose_best_room(free_rooms_of_type, start_date, end_date):
     
     busyness_of_rooms = []
     for room in free_rooms_of_type:
-        reservations_starting_in_interval = Reservation.objects.filter(start_date__gte = start_date + timedelta(days=INTERVAL_TO_CHECK), start_date__lte =  end_date + timedelta(days=INTERVAL_TO_CHECK)).count()
-        reservations_ending_in_interval = Reservation.objects.filter(end_date__gte = start_date + timedelta(days=INTERVAL_TO_CHECK), end_date__lte =  end_date + timedelta(days=INTERVAL_TO_CHECK)).count()
+        reservations_starting_in_interval = Reservation.objects.filter(room__id=room.id, start_date__gte = start_date + timedelta(days=INTERVAL_TO_CHECK), start_date__lte =  end_date + timedelta(days=INTERVAL_TO_CHECK)).count()
+        reservations_ending_in_interval = Reservation.objects.filter(room__id=room.id, end_date__gte = start_date + timedelta(days=INTERVAL_TO_CHECK), end_date__lte =  end_date + timedelta(days=INTERVAL_TO_CHECK)).count()
         busyness_of_rooms.append(reservations_starting_in_interval + reservations_ending_in_interval)
     
     index_of_best = busyness_of_rooms.index(max(busyness_of_rooms))
     return free_rooms_of_type[index_of_best]
+
+
+def interval_scheduling(hotel_id, room_type, start_date, end_date):
+    """
+    Algorithm name: Interval Scheduling.
+
+    Problem: Find the minimum number of rooms we need
+    to host the previous reservations and the current one.
+    Also, edit the database according to the new schedule.
+
+    The soultion is greedy but optimal.
+    """
+    room_type = RoomType.objects.get(type=room_type)
+    room_type = room_type.id
+
+    rooms = get_free_rooms_of_type(hotel_id, start_date, end_date, room_type)
+    rooms = [r.id for r in rooms]
+    rooms.sort()
+
+    reservations = Reservation.objects.filter(room__type=room_type, room__hotel__id=hotel_id)
+    new_reserv = Reservation(start_date=start_date, end_date=end_date, user=request.user, room=room_type)
+    reservations.append(new_reserv)
+    reservations.sort(key=attrgetter('start_date'))
+
+    new_schedule = dict()
+    for res in reservations:
+        q = reservations.filter(end_date__gte=start_date, start_date__lte=start_date)
+        q_ids = [x.id for x in q]
+
+        # select an available room to put the current reservation there
+        put_res_in_this_room_id = False
+        for id in rooms:
+            if id not in q_ids:
+                put_res_in_this_room_id = id
+
+        if not put_res_in_this_room_id:
+            return False    # the reservations cannot fit
+
+        new_rooms_ids[res.id] = put_res_in_this_room_id
+
+    # rearrange the reservations
+    for res in reservations:
+        res.room = new_schedule[res.id]
+        res.save()
+
+    return True

@@ -48,6 +48,8 @@ def login_view(request):
         if user is not None:
             login(request, user)
             return HttpResponseRedirect('/hotels/')
+        else:
+            return HttpResponse('<h1>401: Unauthorized</h1>Wrong username or password!', status=401)
 
     return render(request, "login.html", locals())
 
@@ -89,9 +91,14 @@ def reserve(request, hotel_id):
                 free_rooms_of_type = get_free_rooms_of_type(hotel_id, form.cleaned_data['start_date'], form.cleaned_data['end_date'], room)
                 
                 if not free_rooms_of_type:
-                    # delete all reservations we just put
-                    # (because either all reservations succeed
-                    # for the current request, or none)
+                    # the reservation is not possible,
+                    # but we try to rearrange the previous ones
+                    # and see if we can make them fit better
+                    if interval_scheduling(hotel_id, room, form.cleaned_data['start_date'], form.cleaned_data['end_date']):
+                        continue
+                    # else
+                    # delete all reservations from the current user request
+                    # (because either they all succeed or none does)
                     for res_id in reservations:
                         r = Reservation.objects.get(id=res_id)
                         r.delete()
