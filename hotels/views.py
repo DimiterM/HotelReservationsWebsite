@@ -94,7 +94,8 @@ def reserve(request, hotel_id):
                     # the reservation is not possible,
                     # but we try to rearrange the previous ones
                     # and see if we can make them fit better
-                    if interval_scheduling(hotel_id, room, form.cleaned_data['start_date'], form.cleaned_data['end_date']):
+                    if interval_scheduling(hotel_id, room, form.cleaned_data['start_date'], form.cleaned_data['end_date'], request.user):
+                        log = "Success!"
                         continue
                     # else
                     # delete all reservations from the current user request

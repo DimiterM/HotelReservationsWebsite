@@ -1,8 +1,11 @@
 from django.test import TestCase, Client
 
 from django.contrib.auth import authenticate, login, logout
+from datetime import date, timedelta
 from django.contrib.auth.models import User
+
 from hotels.models import *
+from hotels.helper_views import *
 
 
 class SearchTest(TestCase):
@@ -142,33 +145,158 @@ class RegistrationTest(TestCase):
 
 class ReservationsTest(TestCase):
     def setUp(self):
-        pass
+        rt1 = RoomType(type='RoomType1')
+        rt1.save()
+        rt2 = RoomType(type='RoomType2')
+        rt2.save()
+        rt3 = RoomType(type='RoomType3')
+        rt3.save()
+
+        h = Hotel(name='TestHotel', stars=3, location='Test site', text='!!!')
+        h.save()
+        self.h_id = h.id
+
+        self.r1 = Room(number=11, type=rt1, hotel=h)
+        self.r1.save()
+        self.r2 = Room(number=12, type=rt1, hotel=h)
+        self.r2.save()
+        self.r3 = Room(number=13, type=rt1, hotel=h)
+        self.r3.save()
+
+        self.r4 = Room(number=21, type=rt2, hotel=h)
+        self.r4.save()
+
+        self.r5 = Room(number=31, type=rt3, hotel=h)
+        self.r5.save()
+
+        self.test_user = User.objects.create_user('tester', 'tester@email.com', 'testerpass')
+        self.test_user.save()
 
     def test_successful_reservation(self):
-        pass
+        c = Client()
+        response = c.post('/hotels/login/', {'username': 'tester', 'password': 'testerpass'})
+        response = c.post('/hotels/reserve/' + str(self.h_id) + '/', {'start_date': '2014-07-02', 'end_date': '2014-07-04', 'RoomType1':1, 'RoomType2':1, 'RoomType3':1})
+        self.assertEqual(len(Reservation.objects.filter(start_date='2014-07-02', end_date='2014-07-04')), 3)
+
 
     def test_not_enough_rooms(self):
-        pass
+        c = Client()
+        response = c.post('/hotels/login/', {'username': 'tester', 'password': 'testerpass'})
+
+        response = c.post('/hotels/reserve/' + str(self.h_id) + '/', {'start_date': '2014-07-02', 'end_date': '2014-07-04', 'RoomType1': 1, 'RoomType2': 1, 'RoomType3': 1})
+        previous_state = Reservation.objects.filter(start_date='2014-07-02', end_date='2014-07-04')
+
+        c2 = Client()
+        response2 = c2.post('/hotels/login/', {'username': 'tester', 'password': 'testerpass'})
+        response2 = c2.post('/hotels/reserve/' + str(self.h_id) + '/', {'start_date': '2014-07-02', 'end_date': '2014-07-04', 'RoomType1': 2, 'RoomType2': 0, 'RoomType3': 1})
+        self.assertEqual(response2.context['log'], "Not enough free rooms!")
+        self.assertEqual(set(Reservation.objects.filter(start_date='2014-07-02', end_date='2014-07-04')), set(previous_state))
 
     def test_optimal_scheduled(self):
-        pass
+        c = Client()
+        response = c.post('/hotels/login/', {'username': 'tester', 'password': 'testerpass'})
+
+        res1 = Reservation(start_date='2014-07-02', end_date='2014-07-04', user=self.test_user, room=self.r1)
+        res1.save()
+        res2 = Reservation(start_date='2014-07-05', end_date='2014-07-06', user=self.test_user, room=self.r2)
+        res2.save()
+        res3 = Reservation(start_date='2014-07-07', end_date='2014-07-08', user=self.test_user, room=self.r2)
+        res3.save()
+        res4 = Reservation(start_date='2014-07-02', end_date='2014-07-05', user=self.test_user, room=self.r3)
+        res4.save()
+        res5 = Reservation(start_date='2014-07-06', end_date='2014-07-07', user=self.test_user, room=self.r3)
+        res5.save()
+
+        response = c.post('/hotels/reserve/' + str(self.h_id) + '/', {'start_date': '2014-07-01', 'end_date': '2014-07-06', 'RoomType1': 1, 'RoomType2': 0, 'RoomType3': 0})
+        self.assertEqual(response.context['log'], "Success!")
+        self.assertEqual(len(Reservation.objects.filter(start_date__gte='2014-07-01', end_date__lte='2014-07-08')), 6)
 
     def tearDown(self):
-        pass
+        Reservation.objects.all().delete()
+        User.objects.get(username='tester').delete()
+
 
 
 class AlgorithmsTest(TestCase):
     def setUp(self):
-        pass
+        rt1 = RoomType(type='RoomType1')
+        rt1.save()
+        rt2 = RoomType(type='RoomType2')
+        rt2.save()
+
+        h = Hotel(name='TestHotel', stars=3, location='Test site', text='!!!')
+        h.save()
+        self.h_id = h.id
+
+        self.r1 = Room(number=11, type=rt1, hotel=h)
+        self.r1.save()
+        self.r2 = Room(number=12, type=rt1, hotel=h)
+        self.r2.save()
+        self.r3 = Room(number=13, type=rt1, hotel=h)
+        self.r3.save()
+        self.r4 = Room(number=21, type=rt2, hotel=h)
+        self.r4.save()
+
+        self.test_user = User.objects.create_user('tester', 'tester@email.com', 'testerpass')
+        self.test_user.save()
 
     def test_get_free_rooms_of_type(self):
-        pass
+        c = Client()
+        response = c.post('/hotels/login/', {'username': 'tester', 'password': 'testerpass'})
+        response = c.post('/hotels/reserve/' + str(self.h_id) + '/', {'start_date': '2014-07-02', 'end_date': '2014-07-04', 'RoomType1': 2, 'RoomType2': 1})
+
+        free_rooms = get_free_rooms_of_type(self.h_id, '2014-07-01', '2014-07-07', 'RoomType1')
+        self.assertEqual(len(free_rooms), 1)
 
     def test_best_room_choice(self):
-        pass
+        c = Client()
+        response = c.post('/hotels/login/', {'username': 'tester', 'password': 'testerpass'})
+
+        res1 = Reservation(start_date='2014-07-02', end_date='2014-07-04', user=self.test_user, room=self.r1)
+        res1.save()
+        res2 = Reservation(start_date='2014-07-05', end_date='2014-07-06', user=self.test_user, room=self.r1)
+        res2.save()
+        res3 = Reservation(start_date='2014-07-02', end_date='2014-07-05', user=self.test_user, room=self.r2)
+        res3.save()
+
+        best_room = choose_best_room([self.r1, self.r2, self.r3], date(2014, 7, 7), date(2014, 7, 8))
+        self.assertEqual(best_room, self.r1)
 
     def test_interval_partitioning(self):
-        pass
+        c = Client()
+        response = c.post('/hotels/login/', {'username': 'tester', 'password': 'testerpass'})
+
+        res1 = Reservation(start_date='2014-07-02', end_date='2014-07-04', user=self.test_user, room=self.r1)
+        res1.save()
+        res2 = Reservation(start_date='2014-07-05', end_date='2014-07-06', user=self.test_user, room=self.r2)
+        res2.save()
+        res3 = Reservation(start_date='2014-07-07', end_date='2014-07-08', user=self.test_user, room=self.r2)
+        res3.save()
+        res4 = Reservation(start_date='2014-07-02', end_date='2014-07-05', user=self.test_user, room=self.r3)
+        res4.save()
+        res5 = Reservation(start_date='2014-07-06', end_date='2014-07-07', user=self.test_user, room=self.r3)
+        res5.save()
+
+        result = interval_scheduling(self.h_id, 'RoomType1', '2014-07-01', '2014-07-06', self.test_user)
+        self.assertTrue(result)
+        self.assertEqual(len(Reservation.objects.filter(start_date__gte='2014-07-01', end_date__lte='2014-07-08')), 6)
+
+        # assert conflicting reservations are assigned different rooms
+        res1 = Reservation.objects.get(id=res1.id)
+        res2 = Reservation.objects.get(id=res2.id)
+        res3 = Reservation.objects.get(id=res3.id)
+        res4 = Reservation.objects.get(id=res4.id)
+        res5 = Reservation.objects.get(id=res5.id)
+        res6 = Reservation.objects.get(start_date='2014-07-01', end_date='2014-07-06')
+
+        self.assertNotEqual(res6.room.id, res2.room.id)
+        self.assertNotEqual(res6.room.id, res4.room.id)
+        self.assertNotEqual(res6.room.id, res1.room.id)
+        self.assertNotEqual(res1.room.id, res4.room.id)
+        self.assertNotEqual(res2.room.id, res5.room.id)
+        self.assertNotEqual(res5.room.id, res6.room.id)
+        self.assertNotEqual(res5.room.id, res3.room.id)
 
     def tearDown(self):
-        pass
+        Reservation.objects.all().delete()
+        User.objects.get(username='tester').delete()

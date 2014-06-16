@@ -8,6 +8,14 @@ def get_free_rooms_of_type(hotel_id, start_date, end_date, room_type):
     it retrieves from the database a list of all rooms (in that hotel 
     of that type) that are unoccupied for that time
     
+    Args:
+    hotel_id (int) -> database id of the hotel
+    start_date (date) -> start date
+    end_date (date) -> end date
+    room_type (string) -> type of the room_type
+
+    Returns: list of all unoccupied rooms for the given period
+    
     Algorithm:
     1. Get all rooms in that hotel of that type (roomtype.id)
     2. Get all rooms in the hotel which are taken before start_date and
@@ -35,6 +43,13 @@ def choose_best_room(free_rooms_of_type, start_date, end_date):
     """
     Out of all free rooms candidates to be reserved now
     choose one so that future reservations have a better chance to be satisfied.
+
+    Args:
+    free_rooms_of_type (list of Room objects) -> candidate rooms
+    start_date (date) -> start date
+    end_date (date) -> end date
+
+    Returns: Room object
 
     If we used a greedy algorithm, it would be possible to have such reservations
     which make it impossible for other reservations to happen.
@@ -74,47 +89,67 @@ def choose_best_room(free_rooms_of_type, start_date, end_date):
     return free_rooms_of_type[index_of_best]
 
 
-def interval_scheduling(hotel_id, room_type, start_date, end_date):
+def interval_scheduling(hotel_id, room_type, start_date, end_date, user):
     """
     Algorithm name: Interval Scheduling.
 
     Problem: Find the minimum number of rooms we need
-    to host the previous reservations and the current one.
+    to host the previous reservations and the new one.
     Also, edit the database according to the new schedule.
 
     The soultion is greedy but optimal.
+
+    Args:
+    hotel_id (int) -> database id of the hotel
+    room_type (string) -> type of the room_type
+    start_date (date) -> start date
+    end_date (date) -> end date
+    user (User object) -> the user making the new reservation
+
+    Returns:
+    True, if the reservations can be rearranged to fit
+    False, else
+
+    Side effects!:
+    Entries in the database are rearranged (if True).
+    New reservation is inserted (if True).
     """
+    room_type_str = room_type
     room_type = RoomType.objects.get(type=room_type)
     room_type = room_type.id
 
-    rooms = get_free_rooms_of_type(hotel_id, start_date, end_date, room_type)
+    rooms = Room.objects.filter(hotel__id=hotel_id, type__type=room_type_str)
     rooms = [r.id for r in rooms]
     rooms.sort()
 
-    reservations = Reservation.objects.filter(room__type=room_type, room__hotel__id=hotel_id)
-    new_reserv = Reservation(start_date=start_date, end_date=end_date, user=request.user, room=room_type)
-    reservations.append(new_reserv)
+    random_room_for_new_reserv = Room.objects.filter(hotel__id=hotel_id, type__type=room_type_str)[:1][0]
+    new_reserv = Reservation(start_date=start_date, end_date=end_date, room=random_room_for_new_reserv, user=user)
+    new_reserv.save()
+
+    reservations = list(Reservation.objects.filter(room__type=room_type, room__hotel__id=hotel_id))
     reservations.sort(key=attrgetter('start_date'))
 
     new_schedule = dict()
     for res in reservations:
-        q = reservations.filter(end_date__gte=start_date, start_date__lte=start_date)
+        q = [r for r in reservations if reservations.index(r) < reservations.index(res) and r.end_date >= res.start_date and r.start_date <= res.start_date]
         q_ids = [x.id for x in q]
+        taken_rooms = [new_schedule[x] for x in new_schedule if x in q_ids]
 
         # select an available room to put the current reservation there
         put_res_in_this_room_id = False
         for id in rooms:
-            if id not in q_ids:
+            if id not in taken_rooms:
                 put_res_in_this_room_id = id
 
         if not put_res_in_this_room_id:
+            new_reserv.delete()
             return False    # the reservations cannot fit
 
-        new_rooms_ids[res.id] = put_res_in_this_room_id
+        new_schedule[res.id] = put_res_in_this_room_id
 
     # rearrange the reservations
     for res in reservations:
-        res.room = new_schedule[res.id]
+        res.room = Room.objects.get(id=new_schedule[res.id])
         res.save()
 
     return True
